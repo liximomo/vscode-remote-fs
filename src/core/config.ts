@@ -1,0 +1,33 @@
+import { getUserSetting } from '../host';
+
+const defaultConfig = {
+  // defualt to user login dir
+  rootPath: '',
+};
+
+function withDefault(name, remote) {
+  const copy = Object.assign({}, defaultConfig, remote);
+  copy.name = name;
+
+  // tslint:disable-next-line triple-equals
+  if (copy.port == undefined) {
+    switch (copy.scheme) {
+      case 'sftp':
+        copy.port = 22;
+        break;
+      case 'ftp':
+        copy.port = 21;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return copy;
+}
+
+export function getRemoteList() {
+  const userConfig = getUserSetting();
+  const remote = userConfig.remote;
+  return Object.keys(remote).map(name => withDefault(name, remote[name]));
+}
