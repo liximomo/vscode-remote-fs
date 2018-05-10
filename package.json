@@ -376,7 +376,7 @@
     "test:spec": "jest",
     "package": "vsce package",
     "pub:debug":
-      "rm -rf _debug && mkdir _debug && vsce package --out _debug/sftp-debug.vsix && cd _debug && git init && git commit --allow-empty -m 'update debug package' && git checkout -b debug-pacakge && cp ../INSTALL_DEBUG.md README.md  && git add . && git commit -am 'update debug package' && git push git@github.com:liximomo/vscode-remote-fs.git debug-pacakge --force",
+      "rm -rf _debug && mkdir _debug && vsce package --out _debug/debug.vsix && cd _debug && git init && git commit --allow-empty -m 'update debug package' && git checkout -b debug-pacakge && cp ../INSTALL_DEBUG.md README.md  && git add . && git commit -am 'update debug package' && git push git@github.com:liximomo/vscode-remote-fs.git debug-pacakge --force",
     "lint": "tslint --project tsconfig.json src/**/*.ts"
   },
   "devDependencies": {
