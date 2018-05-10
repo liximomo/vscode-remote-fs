@@ -22,7 +22,6 @@
   "activationEvents": [
     "onFileSystem:sftp",
     "onFileSystem:ftp",
-    "onCommand:remotefs.open",
     "onCommand:remotefs.addFolderToWorkspace"
   ],
   "icon": "icon.png",
@@ -363,10 +362,6 @@
       }
     },
     "commands": [
-      {
-        "command": "remotefs.open",
-        "title": "Remote FS: Open..."
-      },
       {
         "command": "remotefs.addFolderToWorkspace",
         "title": "Remote FS: Add Folder to Workspace"

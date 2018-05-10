@@ -1,58 +1,57 @@
-# remote file system for  VS Code
-Very simple, requires just three lines of config! Very fast, finished in a blink.
+# remote file system for VS Code
 
+Working with any file in everywhere like they are in local with vscdoe.
 
-### Config
+## Features
 
-### Usage
+* Use a remote(sftp/ftp) directory as workspace folder.
+* Password/Passphrase Prompting.
+* Multiple remote folders at once.
 
-### Commands
-| Command              | Description                                  |Detailed description|
-| -------------------- |----------------------------------------------|---------------|
-| `SFTP: Config`         | create a new config file at workspace root  | see below for an explained config file |
-| `SFTP: Upload`         | upload file/directory                       | copies selected files from the local to the remote directory, overwriting the remote ones. Files that are only present on the remote side won't be affected. Files that are only present on the local side will be created remotely|
+## Usage
 
-### Example
-You are even not required to config a password!
+1.  Add your remote configs to "remotefs.remote" in your User Settings.
+2.  `Ctrl+Shift+P` on Windows/Linux open command palette, run `Remote FS: Add Folder to Workspace` command.
+3.  Enjoy it😘!
+
+## Config
 ```json
 {
-  "host": "host",
-  "username": "username",
-  "remotePath": "/remote/workspace", 
+  "dev": {
+    // current only support sftp, ftp is comming soon!
+    "scheme": "sftp",
+    "host": "host",
+    "username": "username",
+    "rootPath": "/path/to/somewhere"
+  },
+  "projectX": {
+    "scheme": "sftp",
+    "host": "host",
+    "username": "username",
+    "privateKeyPath": "/Users/xx/.ssh/id_rsa",
+    "rootPath": "/home/foo/some/projectx"
+  }
 }
 ```
-You can also use an array of configs in the config file.
-```json
-[
-  {
-    "context": "/workspace/a",
-    "host": "host",
-    "username": "username",
-    "password": "password",
-    "remotePath": "/remote/workspace/a", 
-  },
-  {
-    "context": "/workspace/b",
-    "host": "host",
-    "username": "username",
-    "password": "password",
-    "remotePath": "/remote/workspace/b", 
-  }
-]
-```
 
-You can see the full config [here](https://github.com/liximomo/vscode-sftp/wiki/config).
+You can find extra options with auto complete(Ctrl+Space)!
 
------------------------------------------------------------------------------------------------------------
+You can also see the full config [here](https://github.com/liximomo/vscode-remote-fs/wiki/config).
+
+---
 
 ## Donation
-If this project help you reduce time to develop, you can give me a cup of coffee :) 
+
+If this project help you reduce time to develop, you can give me a cup of coffee :)
 
 ### Alipay
+
 ![Alipay](https://raw.githubusercontent.com/liximomo/vscode-sftp/master/assets/alipay.png)
 
 ### Wechat
+
 ![Wechat](https://raw.githubusercontent.com/liximomo/vscode-sftp/master/assets/wechat.png)
 
 ### PayPal
+
 [![PayPal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/liximomo)

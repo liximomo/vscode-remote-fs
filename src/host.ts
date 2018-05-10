@@ -1,10 +1,16 @@
 import * as vscode from 'vscode';
+import { EXTENSION_NAME } from './constants';
+
+export function showErrorMessage(message: string | Error, ...args: any[]) {
+  const errorStr = message instanceof Error ? message.message : message;
+  return vscode.window.showErrorMessage(`[${EXTENSION_NAME}] ${errorStr}`, ...args);
+}
 
 export function getUserSetting() {
   return vscode.workspace.getConfiguration('remotefs');
 }
 
-export function openFolder(uri: vscode.Uri, name?) {
+export function openWorkspace(uri: vscode.Uri, name?) {
   return vscode.workspace.updateWorkspaceFolders(0, 1, { uri, name });
 }
 

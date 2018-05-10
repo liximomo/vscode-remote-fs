@@ -3,10 +3,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as upath from 'upath';
-import { COMMAND_OPEN, COMMAND_ADD_FOLDER_TO_WORKSPACE } from './constants';
+import { COMMAND_ADD_FOLDER_TO_WORKSPACE } from './constants';
 import { getRemoteList } from './core/config';
 import buildURI from './helpers/buildURI';
-import { openFolder } from './host';
+import { addWorkspace } from './host';
 import SFTPFSProvider from './fs-providers/SFTPFSProvider';
 import providerManager from './core/providerManager';
 
@@ -20,6 +20,34 @@ function registerCommand(
   context.subscriptions.push(disposable);
 }
 
+function getRemote() {
+  const remotes = getRemoteList();
+  return vscode.window
+    .showQuickPick(
+      remotes.map(remote => {
+        let description = `${remote.host}:${remote.port}`;
+        if (remote.rootPath) {
+          description += ` at ${remote.rootPath}`;
+        }
+        return {
+          label: remote.name,
+          description,
+          remote,
+        };
+      }),
+      {
+        placeHolder: 'Please choose a remote',
+      }
+    )
+    .then(selection => {
+      if (!selection) {
+        return;
+      }
+
+      return selection.remote;
+    });
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -29,37 +57,10 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  registerCommand(context, COMMAND_OPEN, () => {
-    const remotes = getRemoteList();
-    vscode.window
-      .showQuickPick(
-        remotes.map(remote => {
-          let description = `${remote.host}:${remote.port}`;
-          if (remote.rootPath) {
-            description += ` at ${remote.rootPath}`;
-          }
-          return {
-            label: remote.name,
-            description,
-            remote,
-          };
-        }),
-        {
-          placeHolder: 'Please choose a remote',
-        }
-      )
-      .then(selection => {
-        if (!selection) {
-          return;
-        }
-
-        const remote = selection.remote;
-        const name = remote.rootPath ? upath.basename(remote.rootPath) : remote.name;
-        openFolder(buildURI(remote.scheme, remote.name), `${name} (Remote)`);
-      });
-  });
-  registerCommand(context, COMMAND_ADD_FOLDER_TO_WORKSPACE, () => {
-    console.log('COMMAND_ADD_FOLDER_TO_WORKSPACE');
+  registerCommand(context, COMMAND_ADD_FOLDER_TO_WORKSPACE, async () => {
+    const remote = await getRemote();
+    const name = remote.rootPath ? upath.basename(remote.rootPath) : remote.name;
+    addWorkspace(buildURI(remote.scheme, remote.name), `${name} (Remote)`);
   });
 }
 

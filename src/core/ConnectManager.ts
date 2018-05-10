@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import logger from '../logger';
 import { getRemoteList } from './config';
 import findRemote from '../helpers/findRemote';
 import getRemoteIdentityFromUri from '../helpers/getRemoteIdentityFromUri';
@@ -49,7 +50,7 @@ export default class ConnectManager {
 
     const connPromise = connect(remote)
       .then(client => {
-        console.log('connect success');
+        logger.trace('connect to', id);
         const connectInstance = {
           id: remote.name,
           name: remote.name,
@@ -63,7 +64,6 @@ export default class ConnectManager {
         return connectInstance;
       })
       .catch(error => {
-        // todo error report
         this._connStatusMap.set(id, ConnectStatus.END);
         throw error;
       });

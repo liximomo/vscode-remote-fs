@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
+import * as upath from 'upath';
 import * as fs from 'fs';
 import { Client } from 'ssh2';
-import { getUserSetting, promptForPassword } from '../host';
+import { promptForPassword } from '../host';
 import RemoteFileSystemProvider from '../core/RemoteFileSystemProvider';
-import { ConnectClient, Connect } from '../core/ConnectManager';
+import { ConnectClient } from '../core/ConnectManager';
 
 function readfile(fspath) {
   return new Promise((resolve, reject) => {
@@ -66,8 +67,17 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     return this._connectClient(connectOption);
   }
 
-  isFileExist(uri: vscode.Uri): Thenable<boolean> {
-    return Promise.resolve(false);
+  isFileExist(uri: vscode.Uri, client: ConnectClient): Thenable<boolean> {
+    return new Promise((resolve, reject) => {
+      client.stat(uri.path, err => {
+        if (err) {
+          resolve(false);
+          return;
+        }
+
+        resolve(true);
+      });
+    });
   }
 
   $stat(uri: vscode.Uri, client: ConnectClient): Thenable<vscode.FileStat> {
@@ -89,7 +99,6 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
   }
 
   $readDirectory(uri: vscode.Uri, client: ConnectClient): Thenable<[string, vscode.FileType][]> {
-    console.log('$readDirectory', uri.path);
     return new Promise((resolve, reject) => {
       client.readdir(uri.path, (err, stats) => {
         if (err) {
@@ -103,7 +112,6 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
   }
 
   $createDirectory(uri: vscode.Uri, client: ConnectClient): Thenable<void> {
-    console.log('$createDirectory', uri.path);
     return new Promise<void>((resolve, reject) => {
       client.mkdir(uri.path, err => {
         if (err) {
@@ -115,29 +123,87 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     });
   }
 
-  $readFile(uri: vscode.Uri): Thenable<Uint8Array> {
-    console.log('$readFile', uri.path);
-    return Promise.resolve(new Uint8Array(0));
+  async $readFile(uri: vscode.Uri, client: ConnectClient): Promise<Uint8Array> {
+    const stat = await this.$stat(uri, client);
+
+    if (stat.type === vscode.FileType.SymbolicLink) {
+      return this._readLink(uri, client);
+    }
+
+    return this._readFile(uri, client);
   }
 
-  $createFile(uri: vscode.Uri): Thenable<void> {
-    console.log('$createFile', uri.path);
-    return Promise.resolve();
+  $createFile(uri: vscode.Uri, client: ConnectClient): Thenable<void> {
+    return new Promise((resolve, reject) => {
+      const stream = client.createWriteStream(uri.path);
+
+      const onEnd = err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve();
+      };
+
+      stream.on('error', onEnd);
+      stream.on('finish', onEnd);
+      stream.end();
+    });
   }
 
-  $writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void> {
-    console.log('$writeFile', uri.path);
-    return Promise.resolve();
+  $writeFile(uri: vscode.Uri, content: Uint8Array, client: ConnectClient): Thenable<void> {
+    return new Promise((resolve, reject) => {
+      client.stat(uri.path, (statErr, stat) => {
+        const mode = statErr ? 0o666 : stat.mode;
+        const stream = client.createWriteStream(uri.path, { mode });
+        const onEnd = err => {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          resolve();
+        };
+
+        stream.on('error', onEnd);
+        stream.on('finish', onEnd);
+        stream.end(content);
+      });
+    });
   }
 
-  $delete(uri: vscode.Uri, options: { recursive: boolean }): Thenable<void> {
-    console.log('$delete', uri.path);
-    return Promise.resolve();
+  async $delete(
+    uri: vscode.Uri,
+    options: { recursive: boolean },
+    client: ConnectClient
+  ): Promise<void> {
+    const { recursive } = options;
+    const stat = await this.$stat(uri, client);
+
+    if (stat.type === vscode.FileType.Directory) {
+      return this._deleteDir(uri, recursive, client);
+    }
+
+    return this._deleteFile(uri, client);
   }
 
-  $rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Thenable<void> {
-    console.log('$delete', oldUri.path, newUri.path);
-    return Promise.resolve();
+  $rename(
+    oldUri: vscode.Uri,
+    newUri: vscode.Uri,
+    options: { overwrite: boolean },
+    client: ConnectClient
+  ): Thenable<void> {
+    return new Promise((resolve, reject) => {
+      client.rename(oldUri.path, newUri.path, err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve();
+      });
+    });
   }
 
   private async _connectClient(option): Promise<ConnectClient> {
@@ -162,6 +228,100 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
           reject(err);
         })
         .connect(option);
+    });
+  }
+
+  private _readLink(uri: vscode.Uri, client: ConnectClient): Thenable<Uint8Array> {
+    return new Promise((resolve, reject) => {
+      client.readlink(uri.path, (err, target) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        const targetlUri = uri.with({ path: upath.join(uri.path, target) });
+        this._readFile(targetlUri, client).then(resolve, reject);
+      });
+    });
+  }
+
+  private _readFile(uri: vscode.Uri, client: ConnectClient): Thenable<Uint8Array> {
+    return new Promise((resolve, reject) => {
+      const stream = client.createReadStream(uri.path);
+      const arr = [];
+
+      const onData = chunk => {
+        arr.push(chunk);
+      };
+
+      const onEnd = err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(Uint8Array.from(Buffer.concat(arr)));
+      };
+
+      stream.on('data', onData);
+      stream.on('error', onEnd);
+      stream.on('end', onEnd);
+    });
+  }
+
+  private _deleteFile(uri: vscode.Uri, client: ConnectClient) {
+    return new Promise<void>((resolve, reject) => {
+      client.unlink(uri.path, err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve();
+      });
+    });
+  }
+
+  private _deleteDir(uri: vscode.Uri, recursive, client: ConnectClient) {
+    return new Promise<void>((resolve, reject) => {
+      if (!recursive) {
+        client.rmdir(uri.path, err => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve();
+        });
+
+        return;
+      }
+
+      this.$readDirectory(uri, client).then(
+        fileEntries => {
+          // empty dir
+          if (!fileEntries.length) {
+            this._deleteDir(uri, false, client).then(resolve, e => {
+              reject(e);
+            });
+            return;
+          }
+
+          const rmPromises = fileEntries.map(([filename, fileType]) => {
+            const childUri = uri.with({ path: upath.join(uri.path, filename) });
+            if (fileType === vscode.FileType.Directory) {
+              return this._deleteDir(childUri, true, client);
+            }
+            return this._deleteFile(childUri, client);
+          });
+
+          Promise.all(rmPromises)
+            .then(() => this._deleteDir(uri, false, client))
+            .then(resolve, reject);
+        },
+        err => {
+          reject(err);
+        }
+      );
     });
   }
 }
