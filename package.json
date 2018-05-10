@@ -2,7 +2,7 @@
   "name": "remotefs",
   "displayName": "Remote FS",
   "description": "Working with any file in everywhere like they are in local with vscdoe.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "liximomo",
   "author": "liximomo <liximomo@gmail.com> (https://liximomo.github.io/)",
   "engines": {

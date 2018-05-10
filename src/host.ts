@@ -22,6 +22,6 @@ export function promptForPassword(prompt: string): Promise<string | null> {
   return vscode.window.showInputBox({
     ignoreFocusOut: true,
     password: true,
-    prompt,
+    prompt: `${EXTENSION_NAME}: ${prompt}`,
   }) as Promise<string | null>;
 }

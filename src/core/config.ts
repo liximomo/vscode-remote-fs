@@ -1,8 +1,7 @@
 import { getUserSetting } from '../host';
 
 const defaultConfig = {
-  // defualt to user login dir
-  rootPath: '',
+  rootPath: '/',
 };
 
 function withDefault(name, remote) {

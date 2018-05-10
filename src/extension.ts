@@ -59,6 +59,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   registerCommand(context, COMMAND_ADD_FOLDER_TO_WORKSPACE, async () => {
     const remote = await getRemote();
+    if (!remote) {
+      return;
+    }
     const name = remote.rootPath ? upath.basename(remote.rootPath) : remote.name;
     addWorkspace(buildURI(remote.scheme, remote.name), `${name} (Remote)`);
   });

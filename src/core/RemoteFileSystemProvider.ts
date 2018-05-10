@@ -75,7 +75,8 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
         error = createNotFoundError(uri);
       }
 
-      reportError(error);
+      // fixme vscode will try find .vscode, pom.xml..., don't bother user when there file not f=ound
+      // reportError(error);
       throw error;
     }
   }
