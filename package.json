@@ -24,7 +24,6 @@
     "onFileSystem:ftp",
     "onCommand:remotefs.addFolderToWorkspace"
   ],
-  "icon": "icon.png",
   "main": "./out/src/extension",
   "contributes": {
     "configuration": {
