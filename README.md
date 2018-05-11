@@ -4,7 +4,7 @@ Working with any file in everywhere like they are in local with vscdoe.
 
 ## Features
 
-* Use a remote(sftp/ftp) directory as workspace folder.
+* Provide multiple schemes(sftp, ftp). More is coming!
 * Password/Passphrase Prompting.
 * Multiple remote folders at once.
 
@@ -18,7 +18,6 @@ Working with any file in everywhere like they are in local with vscdoe.
 ```json
 {
   "dev": {
-    // current only support sftp, ftp is comming soon!
     "scheme": "sftp",
     "host": "host",
     "username": "username",

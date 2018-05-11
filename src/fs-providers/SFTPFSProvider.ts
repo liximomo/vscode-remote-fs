@@ -10,8 +10,7 @@ function readfile(fspath) {
   return new Promise((resolve, reject) => {
     fs.readFile(fspath, (err, data) => {
       if (err) {
-        reject(err);
-        return;
+        return reject(err);
       }
 
       resolve(data);
@@ -32,8 +31,6 @@ function getFileType(stat) {
 }
 
 export default class SFTPFSProvider extends RemoteFileSystemProvider {
-  private _client: any = new Client();
-
   async connect(remote): Promise<ConnectClient> {
     // tslint:disable triple-equals
     const shouldPromptForPass =
@@ -84,8 +81,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     return new Promise((resolve, reject) => {
       client.lstat(uri.path, (err, stat) => {
         if (err) {
-          reject(err);
-          return;
+          return reject(err);
         }
 
         const filetype = getFileType(stat);
@@ -95,7 +91,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
           return this._realFileType(uri, client)
             .then(realtype => ({
               type: realtype,
-              ctime: stat.mtime * 1000,
+              ctime: 0,
               mtime: stat.mtime * 1000,
               size: stat.size,
             }))
@@ -104,7 +100,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
 
         resolve({
           type: filetype,
-          ctime: stat.mtime * 1000,
+          ctime: 0,
           mtime: stat.mtime * 1000,
           size: stat.size,
         });
@@ -116,8 +112,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     return new Promise((resolve, reject) => {
       client.readdir(uri.path, (err, stats) => {
         if (err) {
-          reject(err);
-          return;
+          return reject(err);
         }
 
         // vscode-fixme vscode have porblem with symbolicLink, convert it to realtype
@@ -143,8 +138,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     return new Promise<void>((resolve, reject) => {
       client.mkdir(uri.path, err => {
         if (err) {
-          reject(err);
-          return;
+          return reject(err);
         }
         resolve();
       });
@@ -162,8 +156,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
 
       const onEnd = err => {
         if (err) {
-          reject(err);
-          return;
+          return reject(err);
         }
 
         resolve(Uint8Array.from(Buffer.concat(arr)));
@@ -175,24 +168,24 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     });
   }
 
-  $createFile(uri: vscode.Uri, client: ConnectClient): Thenable<void> {
-    return new Promise((resolve, reject) => {
-      const stream = client.createWriteStream(uri.path);
+  // $createFile(uri: vscode.Uri, client: ConnectClient): Thenable<void> {
+  //   return new Promise((resolve, reject) => {
+  //     const stream = client.createWriteStream(uri.path);
 
-      const onEnd = err => {
-        if (err) {
-          reject(err);
-          return;
-        }
+  //     const onEnd = err => {
+  //       if (err) {
+  //         reject(err);
+  //         return;
+  //       }
 
-        resolve();
-      };
+  //       resolve();
+  //     };
 
-      stream.on('error', onEnd);
-      stream.on('finish', onEnd);
-      stream.end();
-    });
-  }
+  //     stream.on('error', onEnd);
+  //     stream.on('finish', onEnd);
+  //     stream.end();
+  //   });
+  // }
 
   $writeFile(uri: vscode.Uri, content: Uint8Array, client: ConnectClient): Thenable<void> {
     return new Promise((resolve, reject) => {
@@ -201,8 +194,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
         const stream = client.createWriteStream(uri.path, { mode });
         const onEnd = err => {
           if (err) {
-            reject(err);
-            return;
+            return reject(err);
           }
 
           resolve();
@@ -233,14 +225,12 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
   $rename(
     oldUri: vscode.Uri,
     newUri: vscode.Uri,
-    options: { overwrite: boolean },
     client: ConnectClient
   ): Thenable<void> {
     return new Promise((resolve, reject) => {
       client.rename(oldUri.path, newUri.path, err => {
         if (err) {
-          reject(err);
-          return;
+          return reject(err);
         }
 
         resolve();
@@ -250,18 +240,19 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
 
   private async _connectClient(option): Promise<ConnectClient> {
     return new Promise<ConnectClient>((resolve, reject) => {
-      this._client
+      const client = new Client();
+      client
         .on('ready', () => {
-          this._client.sftp((err, sftp) => {
+          client.sftp((err, sftp) => {
             if (err) {
               reject(err);
             }
 
             sftp.onEnd = cb => {
-              return this._client.on('end', cb);
+              return client.on('end', cb);
             };
             sftp.end = () => {
-              return this._client.end();
+              return client.end();
             };
             resolve(sftp);
           });
@@ -291,8 +282,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     return new Promise((resolve, reject) => {
       client.realpath(path, (err, target) => {
         if (err) {
-          reject(err);
-          return;
+          return reject(err);
         }
 
         resolve(upath.resolve(path, target));
@@ -304,8 +294,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     return new Promise<void>((resolve, reject) => {
       client.unlink(uri.path, err => {
         if (err) {
-          reject(err);
-          return;
+          return reject(err);
         }
 
         resolve();
@@ -318,8 +307,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
       if (!recursive) {
         client.rmdir(uri.path, err => {
           if (err) {
-            reject(err);
-            return;
+            return reject(err);
           }
           resolve();
         });
@@ -330,12 +318,12 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
       this.$readDirectory(uri, client).then(
         fileEntries => {
           // empty dir
-          if (!fileEntries.length) {
-            this._deleteDir(uri, false, client).then(resolve, e => {
-              reject(e);
-            });
-            return;
-          }
+          // if (!fileEntries.length) {
+          //   this._deleteDir(uri, false, client).then(resolve, e => {
+          //     reject(e);
+          //   });
+          //   return;
+          // }
 
           const rmPromises = fileEntries.map(([filename, fileType]) => {
             const childUri = uri.with({ path: upath.join(uri.path, filename) });

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as upath from 'upath';
 import logger from '../logger';
+// import { removeWorkspace } from '../host';
 import toAbsoluteUri from '../helpers/toAbsoluteUri';
 import reportError from '../helpers/reportError';
 import ConnectManager, { Connect, ConnectClient } from './ConnectManager';
@@ -11,16 +12,18 @@ export enum ErrorCode {
   FILE_EXISTS = 4,
 }
 
-function createNotFoundError(uri: vscode.Uri) {
-  return vscode.FileSystemError.FileNotFound(`${uri.path} not found`);
-}
+export class FileSystemError {
+  static FileNotFound(uri: vscode.Uri) {
+    return vscode.FileSystemError.FileNotFound(`${uri.path} not found`);
+  }
 
-function createNoPermissionsError(uri: vscode.Uri) {
-  return vscode.FileSystemError.NoPermissions(`${uri.path} no permissions`);
-}
+  static NoPermissions(uri: vscode.Uri) {
+    return vscode.FileSystemError.NoPermissions(`${uri.path} no permissions`);
+  }
 
-function createFileExistsError(uri: vscode.Uri) {
-  return vscode.FileSystemError.FileExists(`${uri.path} already exists`);
+  static FileExists(uri: vscode.Uri) {
+    return vscode.FileSystemError.FileExists(`${uri.path} already exists`);
+  }
 }
 
 export default abstract class RemoteFileSystemProvider implements vscode.FileSystemProvider {
@@ -50,7 +53,7 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
   ): Thenable<[string, vscode.FileType][]>;
   abstract $createDirectory(uri: vscode.Uri, client: ConnectClient): Thenable<void>;
   abstract $readFile(uri: vscode.Uri, client: ConnectClient): Thenable<Uint8Array>;
-  abstract $createFile(uri: vscode.Uri, client: ConnectClient): Thenable<void>;
+  // abstract $createFile(uri: vscode.Uri, client: ConnectClient): Thenable<void>;
   abstract $writeFile(uri: vscode.Uri, content: Uint8Array, client: ConnectClient): Thenable<void>;
   abstract $delete(
     uri: vscode.Uri,
@@ -60,7 +63,6 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
   abstract $rename(
     oldUri: vscode.Uri,
     newUri: vscode.Uri,
-    options: { overwrite: boolean },
     client: ConnectClient
   ): Thenable<void>;
   // abstract $copy?(source: vscode.Uri, destination: vscode.Uri, options: { overwrite: boolean }): Thenable<void>;
@@ -72,7 +74,7 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
       return await this.$stat(toAbsoluteUri(uri, connect.wd), connect.client);
     } catch (error) {
       if (error.code === ErrorCode.FILE_NOT_FOUND) {
-        error = createNotFoundError(uri);
+        error = FileSystemError.FileNotFound(uri);
       }
 
       // fixme vscode will try find .vscode, pom.xml..., don't bother user when there file not f=ound
@@ -88,7 +90,7 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
       return await this.$readDirectory(toAbsoluteUri(uri, connect.wd), connect.client);
     } catch (error) {
       if (error.code === ErrorCode.FILE_NOT_FOUND) {
-        error = createNotFoundError(uri);
+        error = FileSystemError.FileNotFound(uri);
       }
 
       reportError(error);
@@ -103,15 +105,15 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
       await this.$createDirectory(toAbsoluteUri(uri, connect.wd), connect.client);
     } catch (error) {
       if (error.code === ErrorCode.FILE_NOT_FOUND) {
-        error = createNotFoundError(uri);
+        error = FileSystemError.FileNotFound(uri);
       }
 
       if (error.code === ErrorCode.PERMISSION_DENIED) {
-        error = createNoPermissionsError(uri);
+        error = FileSystemError.NoPermissions(uri);
       }
 
       if (error.code === ErrorCode.FILE_EXISTS) {
-        error = createFileExistsError(uri);
+        error = FileSystemError.FileExists(uri);
       }
 
       reportError(error);
@@ -131,7 +133,7 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
       return await this.$readFile(toAbsoluteUri(uri, connect.wd), connect.client);
     } catch (error) {
       if (error.code === ErrorCode.FILE_NOT_FOUND) {
-        error = createNotFoundError(uri);
+        error = FileSystemError.FileNotFound(uri);
       }
 
       reportError(error);
@@ -150,13 +152,13 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
     const isExist = await this.isFileExist(absolute, connect.client);
 
     if (!isExist && !options.create) {
-      const error = createNotFoundError(uri);
+      const error = FileSystemError.FileNotFound(uri);
       reportError(error);
       throw error;
     }
 
     if (isExist && options.create && !options.overwrite) {
-      const error = createFileExistsError(uri);
+      const error = FileSystemError.FileExists(uri);
       reportError(error);
       throw error;
     }
@@ -165,7 +167,7 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
       await this.$writeFile(absolute, content, connect.client);
     } catch (error) {
       if (error.code === ErrorCode.PERMISSION_DENIED) {
-        error = createNoPermissionsError(uri);
+        error = FileSystemError.NoPermissions(uri);
       }
 
       reportError(error);
@@ -186,11 +188,11 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
       await this.$delete(toAbsoluteUri(uri, connect.wd), options, connect.client);
     } catch (error) {
       if (error.code === ErrorCode.FILE_NOT_FOUND) {
-        error = createNotFoundError(uri);
+        error = FileSystemError.FileNotFound(uri);
       }
 
       if (error.code === ErrorCode.PERMISSION_DENIED) {
-        error = createNoPermissionsError(uri);
+        error = FileSystemError.NoPermissions(uri);
       }
 
       reportError(error);
@@ -215,7 +217,7 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
     if (!overwrite) {
       const isExist = await this.isFileExist(newUri, connect.client);
       if (isExist) {
-        const error = createFileExistsError(newUri);
+        const error = FileSystemError.FileExists(newUri);
         reportError(error);
         throw error;
       }
@@ -225,7 +227,6 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
       await this.$rename(
         toAbsoluteUri(oldUri, connect.wd),
         toAbsoluteUri(newUri, connect.wd),
-        options,
         connect.client
       );
     } catch (error) {
@@ -254,6 +255,8 @@ export default abstract class RemoteFileSystemProvider implements vscode.FileSys
     try {
       return await this._connectManager.connecting(uri, this.connect);
     } catch (error) {
+      // todo: ux avoid annoy loadding
+      // removeWorkspace(uri);
       reportError(error);
     }
   }

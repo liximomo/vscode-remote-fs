@@ -8,6 +8,7 @@ import { getRemoteList } from './core/config';
 import buildURI from './helpers/buildURI';
 import { addWorkspace } from './host';
 import SFTPFSProvider from './fs-providers/SFTPFSProvider';
+import FTPProvider from './fs-providers/FTPProvider';
 import providerManager from './core/providerManager';
 
 function registerCommand(
@@ -57,12 +58,23 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  context.subscriptions.push(
+    vscode.workspace.registerFileSystemProvider('ftp', providerManager.instance(FTPProvider), {
+      isCaseSensitive: true,
+    })
+  );
+
   registerCommand(context, COMMAND_ADD_FOLDER_TO_WORKSPACE, async () => {
     const remote = await getRemote();
     if (!remote) {
       return;
     }
-    const name = remote.rootPath ? upath.basename(remote.rootPath) : remote.name;
+    let name = remote.rootPath ? upath.basename(remote.rootPath) : remote.name;
+
+    // basename may return '', make true we have a value for name
+    if (name === '') {
+      name = remote.name;
+    }
     addWorkspace(buildURI(remote.scheme, remote.name), `${name} (Remote)`);
   });
 }

@@ -2,6 +2,7 @@ import { getUserSetting } from '../host';
 
 const defaultConfig = {
   rootPath: '/',
+  connectTimeout: 1000 * 10,
 };
 
 function withDefault(name, remote) {
