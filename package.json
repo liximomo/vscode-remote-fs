@@ -2,7 +2,7 @@
   "name": "remotefs",
   "displayName": "Remote FS",
   "description": "Working with any file in everywhere like they are in local with vscdoe.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "liximomo",
   "author": "liximomo <liximomo@gmail.com> (https://liximomo.github.io/)",
   "engines": {
@@ -21,6 +21,7 @@
     "Other"
   ],
   "keywords": [
+    "ssh",
     "ftp",
     "sftp",
     "fs",
@@ -32,6 +33,7 @@
     "onFileSystem:ftp",
     "onCommand:remotefs.addFolderToWorkspace"
   ],
+  "icon": "icon.png",
   "main": "./out/src/extension",
   "contributes": {
     "configuration": {
