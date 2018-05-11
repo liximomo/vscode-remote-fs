@@ -24,7 +24,6 @@
     "ssh",
     "ftp",
     "sftp",
-    "fs",
     "filesystem",
     "remote"
   ],
