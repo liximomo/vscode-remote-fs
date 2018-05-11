@@ -13,10 +13,6 @@ export interface Logger {
 class VSCodeLogger implements Logger {
   private _outputChannel: vscode.OutputChannel;
 
-  constructor() {
-    this._outputChannel = vscode.window.createOutputChannel(EXTENSION_NAME);
-  }
-
   trace(message: string, ...args: any[]) {
     this._print('[trace]', message, ...args);
   }
@@ -42,6 +38,10 @@ class VSCodeLogger implements Logger {
   }
 
   private _print(...args: any[]) {
+    if (!this._outputChannel) {
+      this._outputChannel = vscode.window.createOutputChannel(EXTENSION_NAME);
+    }
+
     const msg = args
       .map(arg => {
         if (arg instanceof Error) {

@@ -19,7 +19,7 @@ function readfile(fspath) {
   });
 }
 
-function getType(stat) {
+function getFileType(stat) {
   if (stat.isDirectory()) {
     return vscode.FileType.Directory;
   } else if (stat.isFile()) {
@@ -88,10 +88,24 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
           return;
         }
 
+        const filetype = getFileType(stat);
+
+        // vscode-fixme vscode have porblem with symbolicLink, convert it to realtype
+        if (filetype === vscode.FileType.SymbolicLink) {
+          return this._realFileType(uri, client)
+            .then(realtype => ({
+              type: realtype,
+              ctime: stat.mtime * 1000,
+              mtime: stat.mtime * 1000,
+              size: stat.size,
+            }))
+            .then(resolve, reject);
+        }
+
         resolve({
-          type: getType(stat),
-          ctime: stat.mtime,
-          mtime: stat.mtime,
+          type: filetype,
+          ctime: stat.mtime * 1000,
+          mtime: stat.mtime * 1000,
           size: stat.size,
         });
       });
@@ -106,7 +120,21 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
           return;
         }
 
-        resolve(stats.map(stat => [stat.filename, getType(stat.attrs)]));
+        // vscode-fixme vscode have porblem with symbolicLink, convert it to realtype
+        const promises: Thenable<[string, vscode.FileType]>[] = stats.map(stat => {
+          const filename = stat.filename;
+          const fileType = getFileType(stat.attrs);
+          if (fileType === vscode.FileType.SymbolicLink) {
+            return this._realFileType(
+              uri.with({ path: upath.join(uri.path, filename) }),
+              client
+            ).then(realType => [filename, realType]);
+          }
+
+          return Promise.resolve([filename, fileType]);
+        });
+
+        Promise.all(promises).then(resolve, reject);
       });
     });
   }
@@ -123,14 +151,28 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     });
   }
 
-  async $readFile(uri: vscode.Uri, client: ConnectClient): Promise<Uint8Array> {
-    const stat = await this.$stat(uri, client);
+  $readFile(uri: vscode.Uri, client: ConnectClient): Thenable<Uint8Array> {
+    return new Promise((resolve, reject) => {
+      const stream = client.createReadStream(uri.path);
+      const arr = [];
 
-    if (stat.type === vscode.FileType.SymbolicLink) {
-      return this._readLink(uri, client);
-    }
+      const onData = chunk => {
+        arr.push(chunk);
+      };
 
-    return this._readFile(uri, client);
+      const onEnd = err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(Uint8Array.from(Buffer.concat(arr)));
+      };
+
+      stream.on('data', onData);
+      stream.on('error', onEnd);
+      stream.on('end', onEnd);
+    });
   }
 
   $createFile(uri: vscode.Uri, client: ConnectClient): Thenable<void> {
@@ -231,41 +273,30 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     });
   }
 
-  private _readLink(uri: vscode.Uri, client: ConnectClient): Thenable<Uint8Array> {
-    return new Promise((resolve, reject) => {
-      client.readlink(uri.path, (err, target) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+  private async _realFileType(uri: vscode.Uri, client: ConnectClient): Promise<vscode.FileType> {
+    let type;
+    try {
+      const realPath = await this._realPath(uri.path, client);
+      const stat = await this.$stat(uri.with({ path: realPath }), client);
+      type = stat.type;
+    } catch (_) {
+      // suppress error, fallback to Unknown for UX
+      type = vscode.FileType.Unknown;
+    }
 
-        const targetlUri = uri.with({ path: upath.join(uri.path, target) });
-        this._readFile(targetlUri, client).then(resolve, reject);
-      });
-    });
+    return type;
   }
 
-  private _readFile(uri: vscode.Uri, client: ConnectClient): Thenable<Uint8Array> {
+  private _realPath(path: string, client: ConnectClient): Thenable<string> {
     return new Promise((resolve, reject) => {
-      const stream = client.createReadStream(uri.path);
-      const arr = [];
-
-      const onData = chunk => {
-        arr.push(chunk);
-      };
-
-      const onEnd = err => {
+      client.realpath(path, (err, target) => {
         if (err) {
           reject(err);
           return;
         }
 
-        resolve(Uint8Array.from(Buffer.concat(arr)));
-      };
-
-      stream.on('data', onData);
-      stream.on('error', onEnd);
-      stream.on('end', onEnd);
+        resolve(upath.resolve(path, target));
+      });
     });
   }
 
