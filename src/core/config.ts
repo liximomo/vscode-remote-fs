@@ -7,7 +7,8 @@ const defaultConfig = {
 
 function withDefault(name, remote) {
   const copy = Object.assign({}, defaultConfig, remote);
-  copy.name = name;
+  copy.name = name.toLowerCase();
+  copy.scheme = copy.scheme.toLowerCase();
 
   // tslint:disable-next-line triple-equals
   if (copy.port == undefined) {

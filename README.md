@@ -10,25 +10,38 @@ Working with any file in everywhere like they are in local with vscdoe.
 
 ## Usage
 
-1.  Add your remote configs to "remotefs.remote" in your User Settings.
-2.  `Ctrl+Shift+P` on Windows/Linux open command palette, run `Remote FS: Add Folder to Workspace` command.
-3.  Enjoy it😘!
+1.  Open User Settings.
+
+    * On Windows/Linux - File > Preferences > Settings
+    * On macOS - Code > Preferences > Settings
+
+2.  Add your remote configs to "remotefs.remote" in your User Settings.
+3.  `Cmd+Shift+P` open command palette(`Ctrl+Shift+P` on Windows/Linux), run `Remote FS: Add Folder to Workspace` command.
+4.  Enjoy it😘!
 
 ## Config
+
 ```json
 {
-  "dev": {
-    "scheme": "sftp",
-    "host": "host",
-    "username": "username",
-    "rootPath": "/path/to/somewhere"
-  },
-  "projectX": {
-    "scheme": "sftp",
-    "host": "host",
-    "username": "username",
-    "privateKeyPath": "/Users/xx/.ssh/id_rsa",
-    "rootPath": "/home/foo/some/projectx"
+  "remotefs.remote": {
+    "dev": {
+      "scheme": "sftp",
+      "host": "host",
+      "username": "username",
+      "rootPath": "/path/to/somewhere"
+    },
+    "site": {
+      "scheme": "ftp",
+      "host": "host",
+      "username": "username"
+    },
+    "projectX": {
+      "scheme": "sftp",
+      "host": "host",
+      "username": "username",
+      "privateKeyPath": "/Users/xx/.ssh/id_rsa",
+      "rootPath": "/home/foo/some/projectx"
+    }
   }
 }
 ```
