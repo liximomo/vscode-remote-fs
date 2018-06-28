@@ -32,22 +32,22 @@ function getFileType(stat) {
 
 export default class SFTPFSProvider extends RemoteFileSystemProvider {
   async connect(remote): Promise<ConnectClient> {
+    let { password, passphrase } = remote;
+
     // tslint:disable triple-equals
     const shouldPromptForPass =
-      remote.password == undefined &&
-      remote.agent == undefined &&
-      remote.privateKeyPath == undefined;
+      password == undefined && remote.agent == undefined && remote.privateKeyPath == undefined;
     // tslint:enable
 
     if (shouldPromptForPass) {
       // modify remote so we don't need later
-      remote.password = await promptForPassword('Enter your password');
+      password = await promptForPassword('Enter your password');
     }
 
     // explict compare to true, cause we want to distinct between string and true
-    if (remote.passphrase === true) {
+    if (passphrase === true) {
       // modify remote so we don't need later
-      remote.passphrase = await promptForPassword('Enter your passphrase');
+      passphrase = await promptForPassword('Enter your passphrase');
     }
 
     const { interactiveAuth, connectTimeout, privateKeyPath, ...connectOption } = remote;
@@ -55,13 +55,16 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     connectOption.tryKeyboard = interactiveAuth;
     connectOption.readyTimeout = connectTimeout;
     connectOption.keepaliveInterval = 1000 * 30;
-    connectOption.keepaliveCountMax = 2;
 
     if (privateKeyPath) {
       connectOption.privateKey = await readfile(privateKeyPath);
     }
 
-    return this._connectClient(connectOption);
+    return this._connectClient({
+      ...connectOption,
+      password,
+      passphrase,
+    });
   }
 
   isFileExist(uri: vscode.Uri, client: ConnectClient): Thenable<boolean> {
@@ -222,11 +225,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
     return this._deleteFile(uri, client);
   }
 
-  $rename(
-    oldUri: vscode.Uri,
-    newUri: vscode.Uri,
-    client: ConnectClient
-  ): Thenable<void> {
+  $rename(oldUri: vscode.Uri, newUri: vscode.Uri, client: ConnectClient): Thenable<void> {
     return new Promise((resolve, reject) => {
       client.rename(oldUri.path, newUri.path, err => {
         if (err) {

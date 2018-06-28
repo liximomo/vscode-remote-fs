@@ -37,16 +37,18 @@ export default class FTPFSProvider extends RemoteFileSystemProvider {
   private _queue: any = new PQueue({ concurrency: 1 });
 
   async connect(remote): Promise<ConnectClient> {
+    let password = remote.password;
+
     // tslint:disable triple-equals
-    const shouldPromptForPass = remote.password == undefined;
+    const shouldPromptForPass = password == undefined;
     // tslint:enable
 
     if (shouldPromptForPass) {
       // modify remote so we don't need later
-      remote.password = await promptForPassword('Enter your password');
+      password = await promptForPassword('Enter your password');
     }
 
-    const { connectTimeout, host, port, username, password } = remote;
+    const { connectTimeout, host, port, username } = remote;
 
     return this._connectClient({
       host,
