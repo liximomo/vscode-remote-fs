@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import logger from '../logger';
-import { getRemoteList } from './config';
-import findRemote from '../helpers/findRemote';
+import { findRemoteByUri } from '../helpers/findRemote';
 import getRemoteIdentityFromUri from '../helpers/getRemoteIdentityFromUri';
 
 enum ConnectStatus {
@@ -39,7 +38,7 @@ export default class ConnectManager {
       return client;
     }
 
-    const remote = findRemote(uri, getRemoteList());
+    const remote = findRemoteByUri(uri);
     if (!remote) {
       // todo error report
       // tslint:disable-next-line quotemark
