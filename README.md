@@ -52,7 +52,7 @@ You can find extra options with auto complete(Ctrl+Space)!
 You can also see the full config [here](https://github.com/liximomo/vscode-remote-fs/wiki/config).
 
 ## CLI
-Once you've config your remote in User Setting. You can open any remote will `code` CLI in your terminal.
+Once you've config your remote in User Setting. You can open any remote from `code` CLI in your terminal.
 
 ### Usage
 
