@@ -134,6 +134,8 @@ export default class FTPFSProvider extends RemoteFileSystemProvider {
       client.keepAlive(1000 * 10);
       client.onEnd = cb => {
         client.socket.once('end', cb);
+        client.socket.once('close', cb);
+        client.socket.once('error', cb);
       };
       client.end = () => {
         client.destroy();

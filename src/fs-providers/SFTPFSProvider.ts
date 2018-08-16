@@ -251,7 +251,10 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
             }
 
             sftp.onEnd = cb => {
-              return client.on('end', cb);
+              return client
+                .on('end', cb)
+                .on('close', cb)
+                .on('error', cb);
             };
             sftp.end = () => {
               return client.end();
