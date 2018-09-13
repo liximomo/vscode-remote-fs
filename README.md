@@ -1,6 +1,6 @@
 # Remote File System for VS Code
 
-Working with any file in everywhere like they are in local with vscdoe.
+Working with any file in everywhere like they are in local with vscode.
 
 ## Features
 
