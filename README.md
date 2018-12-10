@@ -1,3 +1,7 @@
+# Plugin Development Inactive
+
+We are no longer actively developing this plugin. We will be accepting pull requests if anyone would like to contribute to the project.
+
 # Remote File System for VS Code
 
 Working with any file in everywhere like they are in local with vscode.
@@ -101,19 +105,3 @@ Open test at `rootPath`.
 code --folder-uri ftp://test/
 ```
 ---
-
-## Donation
-
-If this project help you reduce time to develop, you can give me a cup of coffee :)
-
-### Alipay
-
-![Alipay](https://raw.githubusercontent.com/liximomo/vscode-sftp/master/assets/alipay.png)
-
-### Wechat
-
-![Wechat](https://raw.githubusercontent.com/liximomo/vscode-sftp/master/assets/wechat.png)
-
-### PayPal
-
-[![PayPal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/liximomo)
