@@ -1,6 +1,6 @@
 # Remote File System for VS Code
 
-Working with any file in everywhere like they are in local with vscdoe.
+Working with any file in everywhere like they are in local with vscode.
 
 ## Features
 
@@ -86,7 +86,7 @@ Setting:
 Open projectX at `rootPath`（/home/foo/some/projectx）.
 
 ```
-code --folder-uri sftp://projectX
+code --folder-uri sftp://projectX/
 ```
 
 Open projectX at `rootPath/dirA` (/home/foo/some/projectx/dirA).
@@ -98,7 +98,7 @@ code --folder-uri sftp://projectX/dirA
 Open test at `rootPath`.
 
 ```
-code --folder-uri ftp://test
+code --folder-uri ftp://test/
 ```
 ---
 
