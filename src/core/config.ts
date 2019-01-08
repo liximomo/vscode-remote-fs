@@ -32,3 +32,7 @@ export function getRemoteList() {
   const remote = userConfig.remote;
   return Object.keys(remote).map(name => withDefault(name, remote[name]));
 }
+
+export function getExtensionSetting() {
+  return getUserSetting();
+}

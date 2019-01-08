@@ -4,12 +4,27 @@
 import * as vscode from 'vscode';
 import * as upath from 'upath';
 import { COMMAND_ADD_FOLDER_TO_WORKSPACE } from './constants';
-import { getRemoteList } from './core/config';
+import { getRemoteList, getExtensionSetting } from './core/config';
 import buildURI from './helpers/buildURI';
 import { addWorkspace } from './host';
 import SFTPFSProvider from './fs-providers/SFTPFSProvider';
 import FTPProvider from './fs-providers/FTPProvider';
 import providerManager from './core/providerManager';
+
+const DEFAULT_ROOTLABEL = '${folderName} — (Remote)';
+
+function supplant(string, props) {
+  let result = string.replace(/\${([^{}]*)}/g, (match, expr) => {
+    const value = props[expr];
+    return typeof value === 'string' || typeof value === 'number' ? value : match;
+  });
+
+  result = result.replace(/"{#([^{}]*)}"/g, (match, expr) => {
+    const value = props[expr];
+    return typeof value === 'string' || typeof value === 'number' ? value : match;
+  });
+  return result;
+}
 
 function registerCommand(
   context: vscode.ExtensionContext,
@@ -65,17 +80,17 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   registerCommand(context, COMMAND_ADD_FOLDER_TO_WORKSPACE, async () => {
+    const extConfig = getExtensionSetting();
     const remote = await getRemote();
     if (!remote) {
       return;
     }
-    let name = remote.rootPath ? upath.basename(remote.rootPath) : remote.name;
 
-    // basename may return '', make true we have a value for name
-    if (name === '') {
-      name = remote.name;
-    }
-    addWorkspace(buildURI(remote.scheme, remote.name), `${name} (Remote)`);
+    const rootLabel = extConfig.get('rootLabel', DEFAULT_ROOTLABEL);
+    const folderName = (remote.rootPath && upath.basename(remote.rootPath)) || '/';
+
+    const label = supplant(rootLabel, { name: remote.name, folderName });
+    addWorkspace(buildURI(remote.scheme, remote.name), label);
   });
 }
 
