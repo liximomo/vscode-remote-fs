@@ -1,3 +1,6 @@
+## Unreleased
+* Support OpenSSH format private key in addition to PEM private key format.
+
 ## 0.0.13 - 2019-01-08
 * Custom label of the root folder by setting `remotefs.rootLabel`.
 
