@@ -372,6 +372,13 @@ bcrypt-pbkdf@^1.0.0:
   dependencies:
     tweetnacl "^0.14.3"
 
+bcrypt-pbkdf@^1.0.2:
+  version "1.0.2"
+  resolved "http://registry.npm.taobao.org/bcrypt-pbkdf/download/bcrypt-pbkdf-1.0.2.tgz#a4301d389b6a43f9b67ff3ca11a3f6637e360e9e"
+  integrity sha1-pDAdOJtqQ/m2f/PKEaP2Y342Dp4=
+  dependencies:
+    tweetnacl "^0.14.3"
+
 beeper@^1.0.0:
   version "1.1.1"
   resolved "http://registry.npm.taobao.org/beeper/download/beeper-1.1.1.tgz#e6d5ea8c5dad001304a70b22638447f69cb2f809"
@@ -2858,7 +2865,7 @@ sax@^1.2.1:
   version "1.2.4"
   resolved "http://registry.npm.taobao.org/sax/download/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
 
-"semver@2 || 3 || 4 || 5", semver@^5.1.0, semver@^5.3.0, semver@^5.4.1:
+"semver@2 || 3 || 4 || 5", semver@^5.3.0, semver@^5.4.1:
   version "5.5.0"
   resolved "http://registry.npm.taobao.org/semver/download/semver-5.5.0.tgz#dc4bbc7a6ca9d916dee5d43516f0092b58f7b8ab"
 
@@ -3012,19 +3019,21 @@ sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "http://registry.npm.taobao.org/sprintf-js/download/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
 
-ssh2-streams@~0.2.0:
-  version "0.2.1"
-  resolved "http://registry.npm.taobao.org/ssh2-streams/download/ssh2-streams-0.2.1.tgz#9c9c9964be60e9644575af328677f64b1e5cbd79"
+ssh2-streams@~0.4.2:
+  version "0.4.2"
+  resolved "http://registry.npm.taobao.org/ssh2-streams/download/ssh2-streams-0.4.2.tgz#bac0d18727396d16049f5f0c8517a46516b45719"
+  integrity sha1-usDRhyc5bRYEn18MhRekZRa0Vxk=
   dependencies:
     asn1 "~0.2.0"
-    semver "^5.1.0"
+    bcrypt-pbkdf "^1.0.2"
     streamsearch "~0.1.2"
 
-ssh2@^v0.6.1:
-  version "0.6.1"
-  resolved "http://registry.npm.taobao.org/ssh2/download/ssh2-0.6.1.tgz#5dde1a7394bb978b1f9c2f014affee2f5493bd40"
+ssh2@^v0.8.2:
+  version "0.8.2"
+  resolved "http://registry.npm.taobao.org/ssh2/download/ssh2-0.8.2.tgz#f7a172458d3a7a13d520438264f90de8a3ee72af"
+  integrity sha1-96FyRY06ehPVIEOCZPkN6KPucq8=
   dependencies:
-    ssh2-streams "~0.2.0"
+    ssh2-streams "~0.4.2"
 
 sshpk@^1.7.0:
   version "1.14.1"
