@@ -211,12 +211,17 @@ export default class FTPFSProvider extends RemoteFileSystemProvider {
   private _readdirAtomic(dir: string, client: ConnectClient): Promise<FfpFileEntry[]> {
     const task = () =>
       new Promise((resolve, reject) => {
-        client.ls(dir, (err, entries) => {
+        client.ls(dir, (err, entries: FfpFileEntry[]) => {
           if (err) {
             return reject(err);
           }
 
-          resolve(entries);
+          resolve(
+            entries.map(entry => ({
+              ...entry,
+              size: Number(entry.size),
+            }))
+          );
         });
       });
 
