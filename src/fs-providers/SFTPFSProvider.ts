@@ -89,11 +89,10 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
 
         const filetype = getFileType(stat);
 
-        // vscode have porblem with directory symbolicLink, convert it to realtype
         if (filetype === vscode.FileType.SymbolicLink) {
           return this._realFileType(uri, client)
             .then(realType => ({
-              type: realType === vscode.FileType.Directory ? realType : filetype,
+              type: vscode.FileType.SymbolicLink | realType, // tslint:disable-line: no-bitwise
               ctime: 0,
               mtime: stat.mtime * 1000,
               size: stat.size,
@@ -118,7 +117,6 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
           return reject(err);
         }
 
-        // vscode-fixme vscode have porblem with symbolicLink, convert it to realtype
         const promises: Thenable<[string, vscode.FileType]>[] = stats.map(stat => {
           const filename = stat.filename;
           const fileType = getFileType(stat.attrs);
@@ -128,7 +126,7 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
               client
             ).then(realType => [
               filename,
-              realType === vscode.FileType.Directory ? realType : fileType,
+              vscode.FileType.SymbolicLink | realType, // tslint:disable-line: no-bitwise
             ]);
           }
 
