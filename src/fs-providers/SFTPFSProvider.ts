@@ -39,6 +39,15 @@ export default class SFTPFSProvider extends RemoteFileSystemProvider {
       password == undefined && remote.agent == undefined && remote.privateKeyPath == undefined;
     // tslint:enable
 
+    if (remote.agent != undefined && remote.agent.startsWith('$')) {
+        const evnVarName = remote.agent.slice(1);
+        const val = process.env[evnVarName];
+        if (!val) {
+            throw new Error(`Environment variable "${evnVarName}" not found`);
+        }
+        remote.agent = val;
+    }
+
     if (shouldPromptForPass) {
       // modify remote so we don't need later
       password = await promptForPassword('Enter your password');
