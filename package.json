@@ -266,7 +266,7 @@
   "dependencies": {
     "jsftp": "^2.1.3",
     "p-queue": "^2.4.2",
-    "ssh2": "^v0.8.2",
+    "ssh2": "^v0.8.5",
     "upath": "^1.0.0"
   },
   "jest": {
