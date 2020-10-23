@@ -48,7 +48,9 @@ export default class FTPFSProvider extends RemoteFileSystemProvider {
       password = await promptForPassword('Enter your password');
     }
 
-    const { connectTimeout, host, port, username } = remote;
+    // changed by myasnick, 2020.10.22: postLoginCommand added
+    const { postLoginCommand, connectTimeout, host, port, username } = remote;
+    // /changed by myasnick
 
     return this._connectClient({
       host,
@@ -56,6 +58,9 @@ export default class FTPFSProvider extends RemoteFileSystemProvider {
       user: username,
       pass: password,
       timeout: connectTimeout,
+      // added by myasnick, 2020.10.22: postLoginCommand
+      postLoginCommand: postLoginCommand,
+      // /added by myasnick
     });
   }
 
@@ -145,6 +150,12 @@ export default class FTPFSProvider extends RemoteFileSystemProvider {
         if (err) {
           return reject(err);
         }
+
+        // added by myasnick, 2020.10.22: postLoginCommand
+        if (option.postLoginCommand) {
+          client.raw(option.postLoginCommand);
+        }
+        // /added by myasnick
 
         return resolve(client);
       });
