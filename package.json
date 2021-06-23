@@ -1,7 +1,7 @@
 {
   "name": "remotefs",
   "displayName": "Remote FS",
-  "description": "Working with any file in everywhere like they are in local with vscdoe.",
+  "description": "Working with any file in everywhere like they are in local with vscode.",
   "version": "0.0.16",
   "publisher": "liximomo",
   "author": "liximomo <liximomo@gmail.com> (https://liximomo.github.io/)",
