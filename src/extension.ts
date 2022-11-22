@@ -89,7 +89,7 @@ export function activate(context: vscode.ExtensionContext) {
     const rootLabel = extConfig.get('rootLabel', DEFAULT_ROOTLABEL);
     const folderName = (remote.rootPath && upath.basename(remote.rootPath)) || '/';
 
-    const label = supplant(rootLabel, { name: remote.name, folderName });
+    const label = remote.label || supplant(rootLabel, { name: remote.name, folderName });
     addWorkspace(buildURI(remote.scheme, remote.name), label);
   });
 }
